@@ -16,6 +16,12 @@ pipeline {
             }
         }
 
+        stage('Secrets Scan - Gitleaks') {
+            steps {
+                sh 'gitleaks detect --source . -v --exit-code 1'
+            }
+        }
+
         stage('Build with Maven') {
             steps {
                 sh 'mvn clean package -DskipTests'

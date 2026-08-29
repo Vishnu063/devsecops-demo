@@ -2,6 +2,14 @@ pipeline {
     agent any
 
     stages {
+        stage('Debug Java') {
+            steps {
+                sh 'which java'
+                sh 'java -version'
+                sh 'echo $JAVA_HOME'
+            }
+        }
+
         stage('Checkout') {
             steps {
                 checkout scm

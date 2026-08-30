@@ -1,3 +1,7 @@
 *.swp
 target/
 *.class
+terraform/.terraform/
+terraform/kubectl
+terraform/*.tfstate
+terraform/*.tfstate.backup

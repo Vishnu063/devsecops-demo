@@ -47,7 +47,7 @@ pipeline {
             }
         }
 
-        stage('Deploy to Environment') {
+        stage('Update GitOps Manifest') {
             steps {
                 script {
                     def namespace = ""
@@ -63,10 +63,16 @@ pipeline {
                         error("No deployment configured for branch: ${env.BRANCH_NAME}")
                     }
 
-                    sh """
-                        aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
-                        sed 's|IMAGE_PLACEHOLDER|$ECR_REPO:$BUILD_NUMBER|' k8s/deployment.yaml | kubectl apply -n ${namespace} -f -
-                    """
+                    withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+                        sh """
+                            git config user.email "jenkins@ci.local"
+                            git config user.name "Jenkins CI"
+                            sed -i "s|image: .*devsecops-demo.*|image: ${ECR_REPO}:${BUILD_NUMBER}|" k8s/deployment.yaml
+                            git add k8s/deployment.yaml
+                            git commit -m "Update image to build ${BUILD_NUMBER} [skip ci]" || echo "No changes to commit"
+                            git push https://\${GIT_USER}:\${GIT_TOKEN}@github.com/Vishnu063/devsecops-demo.git HEAD:${env.BRANCH_NAME}
+                        """
+                    }
                 }
             }
         }

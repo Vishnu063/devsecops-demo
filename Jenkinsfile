@@ -67,7 +67,7 @@ pipeline {
                         sh """
                             git config user.email "jenkins@ci.local"
                             git config user.name "Jenkins CI"
-                            sed -i "s|image: .*devsecops-demo.*|image: ${ECR_REPO}:${BUILD_NUMBER}|" k8s/deployment.yaml
+                            sed -i "s|image: .*|image: ${ECR_REPO}:${BUILD_NUMBER}|" k8s/deployment.yaml
                             git add k8s/deployment.yaml
                             git commit -m "Update image to build ${BUILD_NUMBER} [skip ci]" || echo "No changes to commit"
                             git push https://\${GIT_USER}:\${GIT_TOKEN}@github.com/Vishnu063/devsecops-demo.git HEAD:${env.BRANCH_NAME}

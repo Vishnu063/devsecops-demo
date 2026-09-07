@@ -10,7 +10,9 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                retry(3) {
+                    checkout scm
+                }
             }
         }
 

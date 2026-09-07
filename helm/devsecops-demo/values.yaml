@@ -1,0 +1,16 @@
+replicaCount: 1
+
+image:
+  repository: 138300868541.dkr.ecr.ap-south-1.amazonaws.com/devsecops-demo
+  tag: "latest"
+
+service:
+  type: ClusterIP
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "250m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"

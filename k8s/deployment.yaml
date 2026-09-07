@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: devsecops-demo
-          image: IMAGE_PLACEHOLDER
+          image: 138300868541.dkr.ecr.ap-south-1.amazonaws.com/devsecops-demo:7
           ports:
             - containerPort: 8080
           resources:

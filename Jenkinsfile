@@ -20,6 +20,13 @@ pipeline {
             }
         }
 
+        stage('SAST Scan - Semgrep') {
+            steps {
+                sh 'semgrep --config auto src/ --error --json --output semgrep-results.json || true'
+                sh 'semgrep --config auto src/'
+            }
+        }
+
         stage('Run Tests') {
             steps {
                 sh 'mvn test'

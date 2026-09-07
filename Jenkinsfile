@@ -44,6 +44,11 @@ pipeline {
                 sh 'docker build -t $ECR_REPO:$BUILD_NUMBER .'
             }
         }
+        stage('Container Scan - Trivy') {
+            steps {
+                sh 'trivy image --severity CRITICAL,HIGH --exit-code 1 $ECR_REPO:$BUILD_NUMBER || true'
+            }
+        }
 
         stage('Push to ECR') {
             steps {

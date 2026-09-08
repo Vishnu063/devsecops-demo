@@ -48,7 +48,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $ECR_REPO:$IMAGE_TAG .'
+sh 'docker build --no-cache -t $ECR_REPO:$IMAGE_TAG .'
             }
         }
 

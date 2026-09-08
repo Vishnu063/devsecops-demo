@@ -8,7 +8,8 @@ public class DemoController {
 
     @GetMapping("/api/hello")
     public String hello() {
-        return "Hello, public endpoint!";
+String broken = null;
+    return broken.toUpperCase();
     }
 
     @GetMapping("/api/secure")

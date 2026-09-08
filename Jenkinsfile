@@ -1,10 +1,15 @@
 pipeline {
     agent any
 
+    options {
+        retry(2)
+    }
+
     environment {
         ECR_REPO = "138300868541.dkr.ecr.ap-south-1.amazonaws.com/devsecops-demo"
         AWS_REGION = "ap-south-1"
         CLUSTER_NAME = "devsecops-demo-cluster"
+        IMAGE_TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -43,12 +48,13 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $ECR_REPO:$BUILD_NUMBER .'
+                sh 'docker build -t $ECR_REPO:$IMAGE_TAG .'
             }
         }
+
         stage('Container Scan - Trivy') {
             steps {
-                sh 'trivy image --severity CRITICAL,HIGH --exit-code 1 $ECR_REPO:$BUILD_NUMBER || true'
+                sh 'trivy image --severity CRITICAL,HIGH --exit-code 1 $ECR_REPO:$IMAGE_TAG || true'
             }
         }
 
@@ -56,7 +62,7 @@ pipeline {
             steps {
                 sh '''
                     aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
-                    docker push $ECR_REPO:$BUILD_NUMBER
+                    docker push $ECR_REPO:$IMAGE_TAG
                 '''
             }
         }
@@ -79,12 +85,10 @@ pipeline {
 
                     sh """
                         aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}
-                        kubectl patch application ${appName} -n argocd --type merge -p '{"spec":{"source":{"helm":{"parameters":[{"name":"image.tag","value":"${BUILD_NUMBER}"}]}}}}'
+                        kubectl patch application ${appName} -n argocd --type merge -p '{"spec":{"source":{"helm":{"parameters":[{"name":"image.tag","value":"${IMAGE_TAG}"}]}}}}'
                     """
                 }
             }
         }
-
-
     }
 }

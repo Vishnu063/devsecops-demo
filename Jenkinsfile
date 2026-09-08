@@ -1,22 +1,36 @@
 pipeline {
     agent any
 
+    options {
+        retry(2)
+    }
+
     environment {
         ECR_REPO = "138300868541.dkr.ecr.ap-south-1.amazonaws.com/devsecops-demo"
         AWS_REGION = "ap-south-1"
         CLUSTER_NAME = "devsecops-demo-cluster"
+        IMAGE_TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                retry(3) {
+                    checkout scm
+                }
             }
         }
 
         stage('Secrets Scan - Gitleaks') {
             steps {
                 sh 'gitleaks detect --source . -v --exit-code 1'
+            }
+        }
+
+        stage('SAST Scan - Semgrep') {
+            steps {
+                sh 'semgrep --config auto src/ --error --json --output semgrep-results.json || true'
+                sh 'semgrep --config auto src/'
             }
         }
 
@@ -34,7 +48,13 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $ECR_REPO:$BUILD_NUMBER .'
+                sh 'docker build -t $ECR_REPO:$IMAGE_TAG .'
+            }
+        }
+
+        stage('Container Scan - Trivy') {
+            steps {
+                sh 'trivy image --severity CRITICAL,HIGH --exit-code 1 $ECR_REPO:$IMAGE_TAG || true'
             }
         }
 
@@ -42,37 +62,31 @@ pipeline {
             steps {
                 sh '''
                     aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
-                    docker push $ECR_REPO:$BUILD_NUMBER
+                    docker push $ECR_REPO:$IMAGE_TAG
                 '''
             }
         }
 
-        stage('Update GitOps Manifest') {
+        stage('Update ArgoCD Application') {
             steps {
                 script {
-                    def namespace = ""
+                    def appName = ""
                     if (env.BRANCH_NAME == 'dev') {
-                        namespace = "dev"
+                        appName = "devsecops-demo-dev"
                     } else if (env.BRANCH_NAME == 'qa') {
-                        namespace = "qa"
+                        appName = "devsecops-demo-qa"
                     } else if (env.BRANCH_NAME == 'staging') {
-                        namespace = "staging"
+                        appName = "devsecops-demo-staging"
                     } else if (env.BRANCH_NAME == 'main') {
-                        namespace = "prod"
+                        appName = "devsecops-demo-prod"
                     } else {
-                        error("No deployment configured for branch: ${env.BRANCH_NAME}")
+                        error("No ArgoCD application configured for branch: ${env.BRANCH_NAME}")
                     }
 
-                    withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
-                        sh """
-                            git config user.email "jenkins@ci.local"
-                            git config user.name "Jenkins CI"
-                            sed -i "s|image: .*|image: ${ECR_REPO}:${BUILD_NUMBER}|" k8s/deployment.yaml
-                            git add k8s/deployment.yaml
-                            git commit -m "Update image to build ${BUILD_NUMBER} [skip ci]" || echo "No changes to commit"
-                            git push https://\${GIT_USER}:\${GIT_TOKEN}@github.com/Vishnu063/devsecops-demo.git HEAD:${env.BRANCH_NAME}
-                        """
-                    }
+                    sh """
+                        aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}
+                        kubectl patch application ${appName} -n argocd --type merge -p '{"spec":{"source":{"helm":{"parameters":[{"name":"image.tag","value":"${IMAGE_TAG}"}]}}}}'
+                    """
                 }
             }
         }

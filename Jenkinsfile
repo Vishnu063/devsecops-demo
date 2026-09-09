@@ -13,6 +13,17 @@ pipeline {
     }
 
     stages {
+
+
+        stage('Debug Environment') {
+            steps {
+                sh 'echo $PATH'
+                sh 'which docker || echo "docker not in PATH"'
+                sh 'whoami'
+            }
+        }
+
+
         stage('Checkout') {
             steps {
                 retry(3) {

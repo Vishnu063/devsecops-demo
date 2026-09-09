@@ -13,6 +13,17 @@ pipeline {
     }
 
     stages {
+
+
+        stage('Debug Environment') {
+            steps {
+                sh 'echo $PATH'
+                sh 'which docker || echo "docker not in PATH"'
+                sh 'whoami'
+            }
+        }
+
+
         stage('Checkout') {
             steps {
                 retry(3) {
@@ -48,7 +59,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $ECR_REPO:$IMAGE_TAG .'
+sh 'docker build --no-cache -t $ECR_REPO:$IMAGE_TAG .'
             }
         }
 

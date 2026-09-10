@@ -1,4 +1,7 @@
 replicaCount: 2
 
+image:
+  tag: "latest"
+
 service:
   type: LoadBalancer

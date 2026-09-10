@@ -88,3 +88,4 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 For each environment (`dev`, `qa`, `staging`, `prod`), create an ArgoCD Application pointing to `helm/devsecops-demo`, using the corresponding `values-{env}.yaml`, with auto-sync enabled.
 # test new GitOps flow Thu Sep 10 09:58:50 UTC 2026
 # retry Thu Sep 10 10:43:50 UTC 2026
+# retry with correct credential Thu Sep 10 10:52:46 UTC 2026

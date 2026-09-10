@@ -3,8 +3,6 @@ pipeline {
 
 
     environment {
-        ECR_REPO = "138300868541.dkr.ecr.ap-south-1.amazonaws.com/devsecops-demo"
-        AWS_REGION = "ap-south-1"
 IMAGE_TAG = "${env.BRANCH_NAME}-${env.GIT_COMMIT.take(7)}"
     }
 
@@ -16,6 +14,20 @@ IMAGE_TAG = "${env.BRANCH_NAME}-${env.GIT_COMMIT.take(7)}"
                 }
             }
         }
+
+
+
+        stage('Set Image Tag') {
+            steps {
+                script {
+                    def commitHash = sh(script: "git rev-parse --short=7 HEAD", returnStdout: true).trim()
+                    env.IMAGE_TAG = "${env.BRANCH_NAME}-${commitHash}"
+                    echo "Using image tag: ${env.IMAGE_TAG}"
+                }
+            }
+        }
+
+
 
         stage('Secrets Scan - Gitleaks') {
             steps {

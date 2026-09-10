@@ -1,14 +1,11 @@
 pipeline {
     agent any
 
-    options {
-        retry(2)
-    }
 
     environment {
         ECR_REPO = "138300868541.dkr.ecr.ap-south-1.amazonaws.com/devsecops-demo"
         AWS_REGION = "ap-south-1"
-        IMAGE_TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
+IMAGE_TAG = "${env.BRANCH_NAME}-${env.GIT_COMMIT.take(7)}"
     }
 
     stages {

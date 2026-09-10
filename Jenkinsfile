@@ -1,9 +1,9 @@
 pipeline {
     agent any
 
-
     environment {
-IMAGE_TAG = "${env.BRANCH_NAME}-${env.GIT_COMMIT.take(7)}"
+        ECR_REPO = "138300868541.dkr.ecr.ap-south-1.amazonaws.com/devsecops-demo"
+        AWS_REGION = "ap-south-1"
     }
 
     stages {
@@ -15,8 +15,6 @@ IMAGE_TAG = "${env.BRANCH_NAME}-${env.GIT_COMMIT.take(7)}"
             }
         }
 
-
-
         stage('Set Image Tag') {
             steps {
                 script {
@@ -26,8 +24,6 @@ IMAGE_TAG = "${env.BRANCH_NAME}-${env.GIT_COMMIT.take(7)}"
                 }
             }
         }
-
-
 
         stage('Secrets Scan - Gitleaks') {
             steps {

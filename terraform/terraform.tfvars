@@ -1,0 +1,14 @@
+aws_region            = "ap-south-1"
+vpc_cidr               = "10.0.0.0/16"
+public_subnet_1_cidr    = "10.0.1.0/24"
+public_subnet_2_cidr    = "10.0.2.0/24"
+availability_zone_1     = "ap-south-1a"
+availability_zone_2     = "ap-south-1b"
+cluster_name            = "devsecops-demo-cluster"
+kubernetes_version      = "1.32"
+node_instance_type      = "t3.small"
+node_desired_size       = 2
+node_min_size           = 2
+node_max_size           = 3
+ecr_repository_name     = "devsecops-demo"
+project_name            = "devsecops-demo"

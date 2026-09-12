@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  tag: "dev-1589f00"
+  tag: "dev-394aed1"
 
 service:
   type: ClusterIP

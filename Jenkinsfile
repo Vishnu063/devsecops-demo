@@ -7,7 +7,24 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+   
+
+        stage('Check Skip CI') {
+            steps {
+                script {
+                    def lastCommitMessage = sh(script: "git log -1 --pretty=%B", returnStdout: true).trim()
+                    if (lastCommitMessage.contains('[skip ci]')) {
+                        currentBuild.result = 'NOT_BUILT'
+                        error("Skipping build: commit message contains [skip ci]")
+                    }
+                }
+            }
+        }
+
+
+
+
+     stage('Checkout') {
             steps {
                 retry(3) {
                     checkout scm

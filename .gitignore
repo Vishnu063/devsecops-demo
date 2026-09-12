@@ -5,3 +5,4 @@ terraform/.terraform/
 terraform/kubectl
 terraform/*.tfstate
 terraform/*.tfstate.backup
+terraform/terraform.tfvars

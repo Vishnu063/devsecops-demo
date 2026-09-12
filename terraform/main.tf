@@ -1,36 +1,55 @@
+terraform {
+  required_version = ">= 1.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+  }
+
+  backend "s3" {
+    bucket         = "devsecops-demo-tfstate-138300868541"
+    key            = "devsecops-demo/terraform.tfstate"
+    region         = "ap-south-1"
+    dynamodb_table = "terraform-locks"
+    encrypt        = true
+  }
+}
+
 provider "aws" {
-  region = "ap-south-1"
+  region = var.aws_region
 }
 
 resource "aws_vpc" "main" {
-  cidr_block           = "10.0.0.0/16"
+  cidr_block           = var.vpc_cidr
   enable_dns_support   = true
   enable_dns_hostnames = true
 
   tags = {
-    Name = "devsecops-demo-vpc"
+    Name = "${var.project_name}-vpc"
   }
 }
 
 resource "aws_subnet" "public_1" {
   vpc_id                  = aws_vpc.main.id
-  cidr_block               = "10.0.1.0/24"
-  availability_zone        = "ap-south-1a"
+  cidr_block               = var.public_subnet_1_cidr
+  availability_zone        = var.availability_zone_1
   map_public_ip_on_launch  = true
 
   tags = {
-    Name = "devsecops-demo-public-1"
+    Name = "${var.project_name}-public-1"
   }
 }
 
 resource "aws_subnet" "public_2" {
   vpc_id                  = aws_vpc.main.id
-  cidr_block               = "10.0.2.0/24"
-  availability_zone        = "ap-south-1b"
+  cidr_block               = var.public_subnet_2_cidr
+  availability_zone        = var.availability_zone_2
   map_public_ip_on_launch  = true
 
   tags = {
-    Name = "devsecops-demo-public-2"
+    Name = "${var.project_name}-public-2"
   }
 }
 
@@ -38,7 +57,7 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "devsecops-demo-igw"
+    Name = "${var.project_name}-igw"
   }
 }
 
@@ -51,7 +70,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "devsecops-demo-public-rt"
+    Name = "${var.project_name}-public-rt"
   }
 }
 

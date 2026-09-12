@@ -1,33 +1,26 @@
 pipeline {
     agent any
 
-    options {
-        retry(2)
-    }
-
     environment {
-        ECR_REPO = "138300868541.dkr.ecr.ap-south-1.amazonaws.com/devsecops-demo"
+        ECR_REPO = "875068569114.dkr.ecr.ap-south-1.amazonaws.com/devsecops-demo"
         AWS_REGION = "ap-south-1"
-        CLUSTER_NAME = "devsecops-demo-cluster"
-        IMAGE_TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
 
     stages {
-
-
-        stage('Debug Environment') {
-            steps {
-                sh 'echo $PATH'
-                sh 'which docker || echo "docker not in PATH"'
-                sh 'whoami'
-            }
-        }
-
-
         stage('Checkout') {
             steps {
                 retry(3) {
                     checkout scm
+                }
+            }
+        }
+
+        stage('Set Image Tag') {
+            steps {
+                script {
+                    def commitHash = sh(script: "git rev-parse --short=7 HEAD", returnStdout: true).trim()
+                    env.IMAGE_TAG = "${env.BRANCH_NAME}-${commitHash}"
+                    echo "Using image tag: ${env.IMAGE_TAG}"
                 }
             }
         }
@@ -59,7 +52,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-sh 'docker build --no-cache -t $ECR_REPO:$IMAGE_TAG .'
+                sh 'docker build --no-cache -t $ECR_REPO:$IMAGE_TAG .'
             }
         }
 
@@ -78,26 +71,32 @@ sh 'docker build --no-cache -t $ECR_REPO:$IMAGE_TAG .'
             }
         }
 
-        stage('Update ArgoCD Application') {
+        stage('Update GitOps Manifest') {
             steps {
                 script {
-                    def appName = ""
+                    def valuesFile = ""
                     if (env.BRANCH_NAME == 'dev') {
-                        appName = "devsecops-demo-dev"
+                        valuesFile = "values-dev.yaml"
                     } else if (env.BRANCH_NAME == 'qa') {
-                        appName = "devsecops-demo-qa"
+                        valuesFile = "values-qa.yaml"
                     } else if (env.BRANCH_NAME == 'staging') {
-                        appName = "devsecops-demo-staging"
+                        valuesFile = "values-staging.yaml"
                     } else if (env.BRANCH_NAME == 'main') {
-                        appName = "devsecops-demo-prod"
+                        valuesFile = "values-prod.yaml"
                     } else {
-                        error("No ArgoCD application configured for branch: ${env.BRANCH_NAME}")
+                        error("No values file configured for branch: ${env.BRANCH_NAME}")
                     }
 
-                    sh """
-                        aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}
-                        kubectl patch application ${appName} -n argocd --type merge -p '{"spec":{"source":{"helm":{"parameters":[{"name":"image.tag","value":"${IMAGE_TAG}"}]}}}}'
-                    """
+                    withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+                        sh """
+                            git config user.email "jenkins@ci.local"
+                            git config user.name "Jenkins CI"
+                            sed -i "s|tag:.*|tag: \\"${IMAGE_TAG}\\"|" helm/devsecops-demo/${valuesFile}
+                            git add helm/devsecops-demo/${valuesFile}
+                            git commit -m "Update ${valuesFile} image tag to ${IMAGE_TAG} [skip ci]" || echo "No changes to commit"
+                            git push https://\${GIT_USER}:\${GIT_TOKEN}@github.com/Vishnu063/devsecops-demo.git HEAD:${env.BRANCH_NAME}
+                        """
+                    }
                 }
             }
         }

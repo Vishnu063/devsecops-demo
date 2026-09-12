@@ -1,7 +1,7 @@
 replicaCount: 2
 
 image:
-  tag: "main-2c05572"
+  tag: "main-f6b2b2b"
 
 service:
   type: LoadBalancer

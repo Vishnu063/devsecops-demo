@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  tag: "qa-9b5c91e"
+  tag: "qa-328bfaa"
 
 service:
   type: ClusterIP

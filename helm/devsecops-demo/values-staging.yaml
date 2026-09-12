@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  tag: "staging-a9a1747"
+  tag: "staging-a3336c8"
 
 service:
   type: ClusterIP

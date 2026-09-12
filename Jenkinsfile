@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        ECR_REPO = "138300868541.dkr.ecr.ap-south-1.amazonaws.com/devsecops-demo"
+        ECR_REPO = "875068569114.dkr.ecr.ap-south-1.amazonaws.com/devsecops-demo"
         AWS_REGION = "ap-south-1"
     }
 

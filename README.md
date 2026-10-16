@@ -1,8 +1,10 @@
-test gitops flow
-test gitops
-confirm auto-trigger
-test again
-# End-to-end pipeline test
+# Java DevSecOps Delivery Lab
+
+A Java/Maven application with Jenkins, Docker, Helm environment values, and Terraform infrastructure material.
+
+[Reviewer walkthrough](INTERVIEW.md)
+
+The setup below is deployment documentation, not proof of a fresh successful deployment. Review account configuration, cluster scope, credentials, and costs before running it.
 
 ## Setup Instructions
 
